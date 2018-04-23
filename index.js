@@ -7,6 +7,7 @@
 
 const http = require('http');
 const url = require('url');
+const {StringDecoder} = require('string_decoder');
 
 // The server should responde to all requests with a string
 const server = http.createServer((req, res) => {
@@ -28,15 +29,22 @@ const server = http.createServer((req, res) => {
     // Get the headers as an object
     const headers = req.headers;
 
-    // Send the response
-    res.end('Hello world\n');
+    // Get the payload, if any
+    const decoder = new StringDecoder('utf-8');
+    let buffer = '';
+    req.on('data', (data) => {// data event will not be fired if ther is no payload
+        buffer += decoder.write(data);
+    });
 
-    // Log the request path
-    console.log(
-        `Request received on path: ${trimmedPath} with method: ${method} and with these query 
-        string parameters ${JSON.stringify(queryStringObject)}`);
+    req.on('end', () => { // end event will always be called
+        buffer += decoder.end();
 
-    console.log('Request received with these headers', headers);
+        // Send the response
+        res.end('Hello world\n');
+
+        // Log the request path
+        console.log(`Request received with payload: ${buffer}`);
+    });
 
 });
 
