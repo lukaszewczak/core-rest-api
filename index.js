@@ -36,7 +36,7 @@ const server = http.createServer((req, res) => {
         payload += decoder.write(data);
     });
 
-    req.on('end', () => { // end event will always be called
+    req.on('end', async () => { // end event will always be called
         payload += decoder.end();
 
         // Choose the handler this request should go to. If one is not found then choose the not found handler
@@ -52,23 +52,22 @@ const server = http.createServer((req, res) => {
         };
 
         // Route hte request to the handler specified in the router
-        chosenHandler(data, (statusCode, responsePayload) => {
-            // Use the status code called back by the handler, or default to the 200
-            statusCode = typeof (statusCode) === 'number' ? statusCode : 200;
+        let {statusCode, data: responsePayload} = await chosenHandler(data);
+        // Use the status code called back by the handler, or default to the 200
+        statusCode = typeof (statusCode) === 'number' ? statusCode : 200;
 
-            // Use the response payload called back by the router, or default to an empty object
-            responsePayload = typeof (responsePayload) === 'object' ? responsePayload : {};
+        // Use the response payload called back by the router, or default to an empty object
+        responsePayload = typeof (responsePayload) === 'object' ? responsePayload : {};
 
-            // Convert the response Payload to a string
-            const payloadString = JSON.stringify(responsePayload);
+        // Convert the response Payload to a string
+        const payloadString = JSON.stringify(responsePayload);
 
-            // Return the response
-            res.writeHead(statusCode);
-            res.end(payloadString);
+        // Return the response
+        res.writeHead(statusCode);
+        res.end(payloadString);
 
-            // Log the response
-            console.log(`Returning this response: ${statusCode} ${payloadString}`);
-        });
+        // Log the response
+        console.log(`Returning this response: ${statusCode} ${payloadString}`);
 
     });
 
@@ -81,14 +80,19 @@ server.listen(3000, () => console.log('The server is listenning on port 300 now'
 const handlers = {};
 
 // Sample handler
-handlers.sample = (data, callback) => {
+handlers.sample = async (data) => {
 // Callback a http status code, and a payload object
-    callback(406, {'name': 'sample handler'});
+    return {
+        statusCode: 406,
+        data: {'name': 'sample handler'}
+    };
 };
 
 // Not found handler
-handlers.notFound = (data, callback) => {
-    callback(404);
+handlers.notFound = async (data, callback) => {
+    return {
+        statusCode: 404
+    };
 };
 
 // Define a request router
