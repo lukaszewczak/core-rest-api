@@ -1,7 +1,8 @@
 const {StringDecoder} = require('string_decoder');
 const url = require('url');
 
-const {handlers, router} = require('./router');
+const routes = require('./routes');
+const helpers = require('./lib/helpers');
 
 // All the server logic for both the http and https server
 module.exports = (req, res) => {
@@ -33,20 +34,17 @@ module.exports = (req, res) => {
     req.on('end', async () => { // end event will always be called
         payload += decoder.end();
 
-        // Choose the handler this request should go to. If one is not found then choose the not found handler
-        const chosenHandler = typeof (router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
-
         // Construct the data object to send to the handler
         const data = {
             trimmedPath,
             queryStringObject,
             method,
             headers,
-            payload
+            payload: helpers.parseJsonToObject(payload)
         };
 
         // Route hte request to the handler specified in the router
-        let {statusCode, data: responsePayload} = await chosenHandler(data);
+        let {statusCode, data: responsePayload} = await routes.chosenHandler(data);
         // Use the status code called back by the handler, or default to the 200
         statusCode = typeof (statusCode) === 'number' ? statusCode : 200;
 
