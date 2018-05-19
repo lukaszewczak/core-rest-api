@@ -1,17 +1,15 @@
 // Define handlers
 const handlers = {};
 
-// Sample handler
-handlers.sample = async (data) => {
-// Callback a http status code, and a payload object
+// Ping handler
+handlers.ping = async (data) => {
     return {
-        statusCode: 406,
-        data: {'name': 'sample handler'}
+        statusCode: 200
     };
 };
 
 // Not found handler
-handlers.notFound = async (data, callback) => {
+handlers.notFound = async (data) => {
     return {
         statusCode: 404
     };
@@ -19,7 +17,7 @@ handlers.notFound = async (data, callback) => {
 
 // Define a request router
 const router = {
-    'sample': handlers.sample
+    ping: handlers.ping
 };
 
 module.exports = {
