@@ -1,5 +1,6 @@
 const _data = require('../lib/data');
 const helpers = require('../lib/helpers');
+const {verifyToken} = require('./tokens');
 
 const COLLECTION = 'users';
 const users = {};
@@ -73,6 +74,15 @@ users.get = async (data) => {
     const phone = typeof(data.queryStringObject.phone) === 'string'
     && data.queryStringObject.phone.trim().length === 9 ? data.queryStringObject.phone : false;
     if (phone) {
+
+        // Lookup the token from the headers
+        const token = typeof (data.headers.token) === 'string' ? data.headers.token : false;
+        // verify that the givn token is valid for the phone number
+        const tokenIsValid = await verifyToken(token, phone);
+        if (!tokenIsValid) {
+            return helpers.responsObject(403, {Error: 'Missing required token in header, or token is invalid'});
+        }
+
         try {
             const user = await _data.read(COLLECTION, phone);
             // Remove the hasshed password from the user object, beofor returning to requeste

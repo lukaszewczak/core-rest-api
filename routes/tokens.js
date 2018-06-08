@@ -147,6 +147,19 @@ tokens.delete = async (data) => {
     }
 };
 
+// Verify it a given token id is currently valid for a given user
+tokens.verifyToken = async (id, phone) => {
+    try {
+// Lookup the token
+        const token = await _data.read(TOKENS_COLLECTION, id);
+        //Check if the token it for the given user and has not expired
+        return token.phone === phone && token.expires > Date.now();
+    } catch (err) {
+        return false;
+    }
+};
+
+module.exports.verifyToken = tokens.verifyToken;
 module.exports = async (data) => {
     const acceptableMethod = ['post', 'get', 'put', 'delete'];
     if (acceptableMethod.includes(data.method)) {
