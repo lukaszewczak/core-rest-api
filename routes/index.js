@@ -1,8 +1,11 @@
+const helpers = require('../lib/helpers');
 const users = require('./users');
+const tokens = require('./tokens');
 
 // Define handlers
 const handlers = {
-    users
+    users,
+    tokens
 };
 
 // Ping handler
@@ -21,9 +24,14 @@ handlers.notFound = async (data) => {
 
 module.exports.chosenHandler = async (data) => {
     // Choose the handler this request should go to. If one is not found then choose the not found handler
-    const chosenHandler = typeof (handlers[data.trimmedPath]) !== 'undefined'
-        ? handlers[data.trimmedPath]
-        : handlers.notFound;
+    try {
+        const chosenHandler = typeof (handlers[data.trimmedPath]) !== 'undefined'
+            ? handlers[data.trimmedPath]
+            : handlers.notFound;
 
-    return chosenHandler(data);
+        return await chosenHandler(data);
+    } catch (err) {
+        console.error(err);
+        return helpers.responsObject(500, {Error: 'Sorry, unexptected error, occur'});
+    }
 };
